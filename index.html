@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Футбольная Аналитика</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 20px; background-color: #f8f9fa; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
+        
+        .search-bar input { padding: 10px; border: 1px solid #ddd; border-radius: 20px; width: 300px; outline: none; }
+        .stats { background: #1e3a8a; color: white; padding: 10px 20px; border-radius: 50px; font-weight: bold; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #334155; color: white; padding: 15px; text-align: left; text-transform: uppercase; font-size: 13px; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+        
+        /* Стили для мест */
+        .rank-1 { background-color: #fffbeb !important; border-left: 5px solid #fbbf24; }
+        .medal { font-weight: bold; padding: 5px 12px; border-radius: 8px; }
+        .gold { background: #fbbf24; color: #78350f; }
+        .silver { background: #e2e8f0; color: #475569; }
+        .bronze { background: #ffedd5; color: #9a3412; }
+        
+        .goals-count { font-weight: bold; color: #2563eb; font-size: 1.1em; }
+        
+        .admin-panel { background: #fef2f2; border: 2px dashed #f87171; padding: 20px; border-radius: 12px; margin-bottom: 30px; }
+        .btn-add { background: #059669; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Итоговая Таблица</h1>
+            <div class="stats">Забито голов: {{ total_goals }}</div>
+        </div>
+
+        <div class="header">
+            <div class="search-bar">
+                <form action="/" method="get">
+                    <input type="text" name="search" placeholder="Поиск клуба или бомбардира..." value="{{ search }}">
+                    {% if is_admin %}<input type="hidden" name="admin" value="1">{% endif %}
+                    <button type="submit" style="border:none; background:none; cursor:pointer;">🔍</button>
+                </form>
+            </div>
+            {% if not is_admin %}
+            <span style="color: #94a3b8; font-size: 0.9em;">Режим просмотра</span>
+            {% endif %}
+        </div>
+
+        {% if is_admin %}
+        <div class="admin-panel">
+            <h3 style="color: #dc2626; margin-top: 0;">Администрирование данных</h3>
+            <form action="/add" method="post">
+                <input type="text" name="item_name" placeholder="Клуб" required style="width:150px">
+                <input type="number" name="rank_place" placeholder="Место" style="width:70px">
+                <input type="text" name="player_name" placeholder="Бомбардир" style="width:150px">
+                <input type="number" name="goals" placeholder="Голы" style="width:70px">
+                <input type="text" name="info_name" placeholder="Турнир" style="width:130px">
+                <select name="status">
+                    <option value="Прошел">Прошел</option>
+                    <option value="Выбыл">Выбыл</option>
+                </select>
+                <button type="submit" class="btn-add">Сохранить</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Место</th>
+                    <th>Футбольный клуб</th>
+                    <th>Игрок</th>
+                    <th>Голы (DESC)</th>
+                    <th>Турнир</th>
+                    <th>Статус</th>
+                    {% if is_admin %}<th>Удалить</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr class="{% if row[6] == 1 %}rank-1{% endif %}">
+                    <td>
+                        {% if row[6] == 1 %}<span class="medal gold">🥇 1</span>
+                        {% elif row[6] == 2 %}<span class="medal silver">🥈 2</span>
+                        {% elif row[6] == 3 %}<span class="medal bronze">🥉 3</span>
+                        {% else %}{{ row[6] or '—' }}{% endif %}
+                    </td>
+                    <td><strong>{{ row[1] }}</strong></td>
+                    <td>{{ row[3] or '—' }}</td>
+                    <td><span class="goals-count">{{ row[4] or 0 }}</span></td>
+                    <td>{{ row[2] or '—' }}</td>
+                    <td>
+                        <span style="color: {% if row[5] == 'Прошел' %}#059669{% else %}#dc2626{% endif %};">
+                            {{ row[5] or '—' }}
+                        </span>
+                    </td>
+                    {% if is_admin %}
+                    <td>
+                        <form action="/delete/{{ row[0] }}" method="post">
+                            <button type="submit" style="color:#ef4444; border:none; background:none; cursor:pointer; font-weight:bold;">✕</button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
